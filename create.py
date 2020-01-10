@@ -3,7 +3,6 @@ import xmlsec
 from lxml import etree
 import pytz
 from datetime import datetime, timedelta
-#import cStringIO
 
 
 def generate_assertion(sf_root_url, user_id, client_id,audience):
@@ -12,7 +11,6 @@ def generate_assertion(sf_root_url, user_id, client_id,audience):
     not_valid_before = issue_instant - timedelta(minutes=10)
     not_valid_after = issue_instant + timedelta(minutes=10)
 
-    #audience = 'www.successfactors.com'
     public_key = """MIIDWTCCAkGgAwIBAgIEBXHy+TANBgkqhkiG9w0BAQsFADBdMQswCQYDVQQGEwJJ
 TjELMAkGA1UECBMCTUgxCzAJBgNVBAcTAk5NMQwwCgYDVQQKEwNSSUwxCzAJBgNV
 BAsTAklUMRkwFwYDVQQDExBwZHdzbzJtMS5yaWwuY29tMB4XDTE5MDkxNjA1NTMy
@@ -49,7 +47,7 @@ JOQmKvk3di38omJ0zdApCufp5nT1H/G+wlPKU9YEokncEQACSfWWXjv4tzjy"""
 
 def sign_assertion(xml_string):
 
-    key = xmlsec.Key.from_file("/Users/macbug/Desktop/wso2carbon.pem", xmlsec.KeyFormat.PEM)
+    key = xmlsec.Key.from_file("/Users/macbug/Desktop/PRIVATE.pem", xmlsec.KeyFormat.PEM)
     root = etree.fromstring(text = xml_string)
     signature_node = xmlsec.tree.find_node(root, xmlsec.Node.SIGNATURE)
     print(etree.tostring(signature_node))
@@ -66,5 +64,5 @@ SAML_ASSERTION_TEMPLATE = """
 
 
 if __name__ == '__main__':
-    unsigned_assertion = generate_assertion("https://sso.ril.com/mysso/saml", "harshavardhan.bugata@ril.com", "apimhc.ril.com", "https://apimhc.ril.com:9443/oauth2/token")
+    unsigned_assertion = generate_assertion("https://APP/mysso/saml", "EMAIL", "IDP", "IDP/oauth2/token")
     print(str(sign_assertion(unsigned_assertion)))
