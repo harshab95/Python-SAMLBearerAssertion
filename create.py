@@ -3,6 +3,7 @@ import xmlsec
 from lxml import etree
 import pytz
 from datetime import datetime, timedelta
+#import cStringIO
 
 
 def generate_assertion(sf_root_url, user_id, client_id,audience):
@@ -10,7 +11,6 @@ def generate_assertion(sf_root_url, user_id, client_id,audience):
     auth_instant = issue_instant
     not_valid_before = issue_instant - timedelta(minutes=10)
     not_valid_after = issue_instant + timedelta(minutes=10)
-
     public_key = """MIIDWTCCAkGgAwIBAgIEBXHy+TANBgkqhkiG9w0BAQsFADBdMQswCQYDVQQGEwJJ
 TjELMAkGA1UECBMCTUgxCzAJBgNVBAcTAk5NMQwwCgYDVQQKEwNSSUwxCzAJBgNV
 BAsTAklUMRkwFwYDVQQDExBwZHdzbzJtMS5yaWwuY29tMB4XDTE5MDkxNjA1NTMy
@@ -46,23 +46,24 @@ JOQmKvk3di38omJ0zdApCufp5nT1H/G+wlPKU9YEokncEQACSfWWXjv4tzjy"""
 
 
 def sign_assertion(xml_string):
-
-    key = xmlsec.Key.from_file("/Users/macbug/Desktop/PRIVATE.pem", xmlsec.KeyFormat.PEM)
+    xmlsec.enable_debug_trace()
+    key = xmlsec.Key.from_file("./wso2carbon.pem", xmlsec.KeyFormat.PEM)
     root = etree.fromstring(text = xml_string)
     signature_node = xmlsec.tree.find_node(root, xmlsec.Node.SIGNATURE)
-    print(etree.tostring(signature_node))
+    #print(etree.tostring(signature_node))
     sign_context = xmlsec.SignatureContext()
     sign_context.key = key
+    sign_context.register_id(node=root)
     sign_context.sign(signature_node)
 
     return etree.tostring(root)
 
 
 SAML_ASSERTION_TEMPLATE = """
-<saml:Assertion xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" ID="mfkbinfpcpcaeokkbmidmklnmbmfdelnhbkffmei" IssueInstant="{issue_instant}" Version="2.0"><saml:Issuer Format="urn:oasis:names:tc:SAML:2.0:nameid-format:entity">{client_id}</saml:Issuer><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:SignedInfo><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315" /><ds:SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1" /><ds:Reference URI="#mfkbinfpcpcaeokkbmidmklnmbmfdelnhbkffmei"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" /><ds:Transform Algorithm="http://www.w3.org/20001/10/xml-exc-c14n#"/><ec:InclusiveNamespaces xmlns:ec="http://w3.org/2001/10/xml-exc-c14n#" PrefixList="ds saml xs xsi"/></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" /><ds:DigestValue></ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue></ds:SignatureValue><ds:KeyInfo><ds:X509Data><ds:X509Certificate>{public_key}</ds:X509Certificate></ds:X509Data></ds:KeyInfo></ds:Signature><saml:Subject><saml:NameID Format="urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress">{user_id}</saml:NameID><saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer"><saml:SubjectConfirmationData InResponseTo="0" NotOnOrAfter="{not_valid_after}" Recipient="{sf_root_url}/oauth2/token" /></saml:SubjectConfirmation></saml:Subject><saml:Conditions NotBefore="{not_valid_before}"  NotOnOrAfter="{not_valid_after}"><saml:AudienceRestriction><saml:Audience>{audience}</saml:Audience></saml:AudienceRestriction></saml:Conditions><saml:AuthnStatement AuthnInstant="{issue_instant}"><saml:AuthnContext><saml:AuthnContextClassRef>urn:oasis:names:tc:SAML:2.0:ac:classes:Password</saml:AuthnContextClassRef></saml:AuthnContext></saml:AuthnStatement><saml:AttributeStatement><saml:Attribute Name="."><saml:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="xs:string">.</saml:AttributeValue></saml:Attribute></saml:AttributeStatement></saml:Assertion>
+<saml:Assertion xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" ID="mfkbinfpcpcaeokkbmidmklnmbmfdelnhbkffmei" IssueInstant="{issue_instant}" Version="2.0"><saml:Issuer Format="urn:oasis:names:tc:SAML:2.0:nameid-format:entity">{client_id}</saml:Issuer><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:SignedInfo><ds:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" /><ds:SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1" /><ds:Reference URI="#mfkbinfpcpcaeokkbmidmklnmbmfdelnhbkffmei"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" /><ds:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"><ec:InclusiveNamespaces xmlns:ec="http://www.w3.org/2001/10/xml-exc-c14n#" PrefixList="ds saml xs xsi"/></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" /><ds:DigestValue></ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue></ds:SignatureValue><ds:KeyInfo><ds:X509Data><ds:X509Certificate>{public_key}</ds:X509Certificate></ds:X509Data></ds:KeyInfo></ds:Signature><saml:Subject><saml:NameID Format="urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress">{user_id}</saml:NameID><saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer"><saml:SubjectConfirmationData InResponseTo="0" NotOnOrAfter="{not_valid_after}" Recipient="{sf_root_url}/oauth2/token" /></saml:SubjectConfirmation></saml:Subject><saml:Conditions NotBefore="{not_valid_before}"  NotOnOrAfter="{not_valid_after}"><saml:AudienceRestriction><saml:Audience>{audience}</saml:Audience></saml:AudienceRestriction></saml:Conditions><saml:AuthnStatement AuthnInstant="{issue_instant}"><saml:AuthnContext><saml:AuthnContextClassRef>urn:oasis:names:tc:SAML:2.0:ac:classes:Password</saml:AuthnContextClassRef></saml:AuthnContext></saml:AuthnStatement><saml:AttributeStatement><saml:Attribute Name="."><saml:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="xs:string">.</saml:AttributeValue></saml:Attribute></saml:AttributeStatement></saml:Assertion>
 """
 
 
 if __name__ == '__main__':
-    unsigned_assertion = generate_assertion("https://APP/mysso/saml", "EMAIL", "IDP", "IDP/oauth2/token")
+    unsigned_assertion = generate_assertion("https://<API POST URL>/mysso/saml", "<USERNAME>", "<IDP HOST>", "<IDP AUTH TOKEN URL>")
     print(str(sign_assertion(unsigned_assertion)))
