@@ -1,5 +1,5 @@
 certifi==2019.11.28
-lxml==4.4.2
+lxml==4.6.2
 pkgconfig==1.5.1
 pytz==2013b0
 xmlsec==1.3.3
