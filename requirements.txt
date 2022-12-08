@@ -1,4 +1,4 @@
-certifi==2019.11.28
+certifi==2022.12.7
 lxml==4.6.5
 pkgconfig==1.5.1
 pytz==2013b0
